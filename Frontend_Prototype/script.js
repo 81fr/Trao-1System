@@ -1,9 +1,16 @@
 // Utility to handle local storage data simulation
 const Storage = {
-    get: (key) => JSON.parse(localStorage.getItem(key) || '[]'),
+    get: (key) => {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : (key === 'customLabels' ? null : []);
+        } catch {
+            return (key === 'customLabels' ? null : []);
+        }
+    },
     set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
     add: (key, item) => {
-        const data = Storage.get(key);
+        const data = Array.isArray(Storage.get(key)) ? Storage.get(key) : [];
         data.push(item);
         Storage.set(key, data);
     }
@@ -33,7 +40,7 @@ const Auth = {
                 return;
             }
 
-            const beneficiaries = Storage.get('beneficiaries');
+            const beneficiaries = Storage.get('beneficiaries') || [];
             const ben = beneficiaries.find(b => b.identity === username); // Treat username as ID input
 
             if (ben) {
@@ -54,7 +61,7 @@ const Auth = {
         }
 
         // Admin & Merchant Login Logic
-        const users = Storage.get('users');
+        const users = Storage.get('users') || [];
         const user = users.find(u => u.username === username && u.password === password && u.role === role);
 
         if (user) {
@@ -81,23 +88,37 @@ const Auth = {
     setRole: (role) => {
         document.getElementById('roleInput').value = role;
         document.querySelectorAll('.role-option').forEach(el => el.classList.remove('active'));
-        document.getElementById(`role_${role}`).classList.add('active');
+        const roleBtn = document.getElementById(`role_${role}`);
+        if (roleBtn) roleBtn.classList.add('active');
 
-        // Dynamic placeholder for Beneficiary
-        const userLabel = document.querySelector('label i.fa-user').parentNode;
+        // Dynamic placeholder for Beneficiary (إصلاح الوصول الهشّ)
+        const userIcon = document.querySelector('label i.fa-user');
         const userInput = document.getElementById('username');
-        if (role === 'beneficiary') {
-            userLabel.childNodes[1].textContent = " رقم الهوية"; // Keep icon
-            userInput.placeholder = "أدخل رقم الهوية (مثلاً: 1010101010)";
-        } else {
-            userLabel.childNodes[1].textContent = " اسم المستخدم";
-            userInput.placeholder = "أدخل اسم المستخدم";
+
+        if (userIcon) {
+            const labelContainer = userIcon.parentElement; // نفترض أن النص بجانب الأيقونة
+            // جرّب الحصول على span مخصّص للنص، وإلا استخدم أقرب عنصر نصي
+            const textSpan =
+                labelContainer.querySelector('span') ||
+                labelContainer.querySelector('.label-text') ||
+                labelContainer;
+
+            if (role === 'beneficiary') {
+                if (textSpan) textSpan.textContent = ' رقم الهوية';
+                if (userInput) userInput.placeholder = 'أدخل رقم الهوية (مثلاً: 1010101010)';
+            } else {
+                if (textSpan) textSpan.textContent = ' اسم المستخدم';
+                if (userInput) userInput.placeholder = 'أدخل اسم المستخدم';
+            }
         }
     },
 
     checkSession: () => {
-        // If we are on login page, do nothing (or redirect if already logged in)
-        if (window.location.pathname.includes('login.html')) {
+        const path = window.location.pathname || '';
+        const page = path.split('/').pop() || '';
+
+        // If we are on login page, redirect if already logged in
+        if (page.includes('login.html')) {
             if (Auth.user) {
                 if (Auth.user.role === 'admin') window.location.href = 'index.html';
                 else if (Auth.user.role === 'merchant') window.location.href = 'merchant_home.html';
@@ -113,23 +134,21 @@ const Auth = {
         }
 
         // Role Protection
-        const page = window.location.pathname.split('/').pop();
-
         // Admin Pages
         const adminPages = ['index.html', 'cards.html', 'wallets.html', 'merchants.html', 'settings.html'];
-        // Note: reports.html is shared but maybe limited view in future. kept accessible for now.
 
         if (Auth.user.role === 'merchant') {
             if (adminPages.some(p => page.includes(p))) {
                 alert('عذراً، ليس لديك صلاحية للوصول لهذه الصفحة.');
                 window.location.href = 'merchant_home.html';
+                return;
             }
         }
 
         if (Auth.user.role === 'beneficiary') {
             if (!page.includes('beneficiary_home.html')) {
-                // If trying to access anything else
                 window.location.href = 'beneficiary_home.html';
+                return;
             }
         }
 
@@ -297,7 +316,7 @@ const Actions = {
             return;
         }
 
-        const users = Storage.get('users');
+        const users = Storage.get('users') || [];
         if (users.some(u => u.username === username)) {
             alert('اسم المستخدم مسجل مسبقاً، اختر اسماً آخر.');
             return;
@@ -319,7 +338,7 @@ const Actions = {
 
     deleteUser: (id) => {
         if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
-        let users = Storage.get('users');
+        let users = Storage.get('users') || [];
         users = users.filter(u => u.id !== id);
         Storage.set('users', users);
         location.reload();
@@ -342,10 +361,12 @@ const POS = {
 
     verifyCard: () => {
         const cardNumber = document.getElementById('cardNumber').value;
-        const cards = Storage.get('cards');
+        const cards = Storage.get('cards') || [];
         const card = cards.find(c => c.number === cardNumber);
 
         const display = document.getElementById('cardStatusDisplay');
+
+        if (!display) return;
 
         if (card) {
             if (card.status === 'موقوف' || card.status === 'Inactive') {
@@ -353,7 +374,9 @@ const POS = {
                 POS.currentCard = null;
             } else {
                 POS.currentCard = card;
-                display.innerHTML = `<span style="color:green">تم التحقق: محفظة ${card.wallet} (الرصيد: ${card.balance} ريال)</span><br><small>المستفيد: ${card.beneficiary || 'غير معروف'}</small>`;
+                display.innerHTML =
+                    `<span style="color:green">تم التحقق: محفظة ${card.wallet} (الرصيد: ${card.balance} ريال)</span><br>` +
+                    `<small>المستفيد: ${card.beneficiary || 'غير معروف'}</small>`;
             }
         } else {
             display.innerHTML = '<span style="color:red">البطاقة غير موجودة</span>';
@@ -373,7 +396,10 @@ const POS = {
     },
 
     updateDisplay: () => {
-        document.getElementById('amountDisplay').innerText = parseFloat(POS.amount).toFixed(2);
+        const el = document.getElementById('amountDisplay');
+        if (!el) return;
+        const val = parseFloat(POS.amount || '0');
+        el.innerText = isNaN(val) ? '0.00' : val.toFixed(2);
     },
 
     processPayment: () => {
@@ -383,7 +409,7 @@ const POS = {
         }
 
         const amount = parseFloat(POS.amount);
-        if (amount <= 0) {
+        if (isNaN(amount) || amount <= 0) {
             alert('يرجى إدخال مبلغ صحيح.');
             return;
         }
@@ -394,8 +420,12 @@ const POS = {
         }
 
         // Deduct logic
-        const cards = Storage.get('cards');
+        const cards = Storage.get('cards') || [];
         const cardIndex = cards.findIndex(c => c.number === POS.currentCard.number);
+        if (cardIndex === -1) {
+            alert('حدث خطأ: لم يتم العثور على البطاقة.');
+            return;
+        }
         cards[cardIndex].balance -= amount;
         Storage.set('cards', cards);
 
@@ -409,26 +439,29 @@ const POS = {
         };
         Storage.add('transactions', transaction);
 
-        // Update Merchant Transaction Count
-        // (Simplified: In a real app we'd find the specific merchant)
-
         // Show Success Modal
-        document.getElementById('successModal').classList.add('active');
-        document.getElementById('receiptContent').innerHTML = `
-            <strong>رقم العملية:</strong> ${transaction.id}<br>
-            <strong>التاريخ:</strong> ${transaction.date}<br>
-            <strong>البطاقة:</strong> ${transaction.card}<br>
-            <strong>المستفيد:</strong> ${cards[cardIndex].beneficiary || 'غير محدد'}<br>
-            <strong>المبلغ:</strong> ${transaction.amount.toFixed(2)} ريال<br>
-            <strong>الرصيد المتبقي:</strong> ${cards[cardIndex].balance.toFixed(2)} ريال<br>
-            <strong>الحالة:</strong> مقبولة
-        `;
+        const modal = document.getElementById('successModal');
+        const receipt = document.getElementById('receiptContent');
+        if (modal) modal.classList.add('active');
+        if (receipt) {
+            receipt.innerHTML = `
+                <strong>رقم العملية:</strong> ${transaction.id}<br>
+                <strong>التاريخ:</strong> ${transaction.date}<br>
+                <strong>البطاقة:</strong> ${transaction.card}<br>
+                <strong>المستفيد:</strong> ${cards[cardIndex].beneficiary || 'غير محدد'}<br>
+                <strong>المبلغ:</strong> ${transaction.amount.toFixed(2)} ريال<br>
+                <strong>الرصيد المتبقي:</strong> ${cards[cardIndex].balance.toFixed(2)} ريال<br>
+                <strong>الحالة:</strong> مقبولة
+            `;
+        }
 
         // Reset
         POS.amount = '0';
         POS.currentCard = null;
-        document.getElementById('cardNumber').value = '';
-        document.getElementById('cardStatusDisplay').innerText = '';
+        const cardInput = document.getElementById('cardNumber');
+        const statusDisplay = document.getElementById('cardStatusDisplay');
+        if (cardInput) cardInput.value = '';
+        if (statusDisplay) statusDisplay.innerText = '';
         POS.updateDisplay();
     },
 
@@ -473,11 +506,11 @@ const Settings = {
     },
 
     applyLabels: () => {
-        const labels = Settings.labels;
+        const labels = Settings.labels || {};
         // Navigation & Titles
-        document.querySelectorAll('[data-i18n="nav_cards"]').forEach(el => el.innerHTML = `<i class="fas fa-credit-card"></i> ${labels.label_cards}`);
-        document.querySelectorAll('[data-i18n="nav_wallets"]').forEach(el => el.innerHTML = `<i class="fas fa-wallet"></i> ${labels.label_wallets}`);
-        document.querySelectorAll('[data-i18n="nav_merchants"]').forEach(el => el.innerHTML = `<i class="fas fa-store"></i> ${labels.label_merchants}`);
+        if (labels.label_cards) document.querySelectorAll('[data-i18n="nav_cards"]').forEach(el => el.innerHTML = `<i class="fas fa-credit-card"></i> ${labels.label_cards}`);
+        if (labels.label_wallets) document.querySelectorAll('[data-i18n="nav_wallets"]').forEach(el => el.innerHTML = `<i class="fas fa-wallet"></i> ${labels.label_wallets}`);
+        if (labels.label_merchants) document.querySelectorAll('[data-i18n="nav_merchants"]').forEach(el => el.innerHTML = `<i class="fas fa-store"></i> ${labels.label_merchants}`);
         document.querySelectorAll('[data-i18n="nav_settings"]').forEach(el => el.innerHTML = `<i class="fas fa-cog"></i> الإعدادات`);
 
         // Specific Pages Titles
@@ -501,7 +534,7 @@ const Settings = {
     },
 
     deleteCategory: (index) => {
-        const cats = Storage.get('categories');
+        const cats = Storage.get('categories') || [];
         cats.splice(index, 1);
         Storage.set('categories', cats);
         Settings.renderCategories();
@@ -510,7 +543,7 @@ const Settings = {
     renderCategories: () => {
         const list = document.getElementById('categoriesList');
         if (!list) return;
-        const cats = Storage.get('categories');
+        const cats = Storage.get('categories') || [];
         list.innerHTML = '';
         cats.forEach((cat, idx) => {
             const li = document.createElement('li');
@@ -534,7 +567,7 @@ const Settings = {
 
     deleteBeneficiary: (id) => {
         if (!confirm('هل أنت متأكد من الحذف؟')) return;
-        let bens = Storage.get('beneficiaries');
+        let bens = Storage.get('beneficiaries') || [];
         bens = bens.filter(b => b.id !== id);
         Storage.set('beneficiaries', bens);
         Settings.renderBeneficiaries();
@@ -543,8 +576,8 @@ const Settings = {
     renderBeneficiaries: () => {
         const tbody = document.getElementById('beneficiariesTableBody');
         if (!tbody) return;
-        const bens = Storage.get('beneficiaries');
-        const cards = Storage.get('cards');
+        const bens = Storage.get('beneficiaries') || [];
+        const cards = Storage.get('cards') || [];
         tbody.innerHTML = '';
         bens.forEach(b => {
             const cardCount = cards.filter(c => c.beneficiary === b.name).length;
@@ -560,10 +593,10 @@ const Settings = {
     },
 
     populateDropdowns: () => {
-        // Categories Dropdown (in create card or wallet)
+        // Categories Dropdown
         const walletSelect = document.getElementById('cardWalletInput');
         if (walletSelect) {
-            const cats = Storage.get('categories');
+            const cats = Storage.get('categories') || [];
             walletSelect.innerHTML = '';
             cats.forEach(c => {
                 const opt = document.createElement('option');
@@ -573,10 +606,10 @@ const Settings = {
             });
         }
 
-        // Beneficiaries Dropdown (in create card)
+        // Beneficiaries Dropdown
         const benSelect = document.getElementById('cardBeneficiaryInput');
         if (benSelect) {
-            const bens = Storage.get('beneficiaries');
+            const bens = Storage.get('beneficiaries') || [];
             benSelect.innerHTML = '<option value="">اختر مستفيد...</option>';
             bens.forEach(b => {
                 const opt = document.createElement('option');
@@ -585,14 +618,14 @@ const Settings = {
                 benSelect.appendChild(opt);
             });
         }
-    }
+    },
+
     populateDropdown: (type, targetElement) => {
-        const data = Storage.get(type);
+        const data = Storage.get(type) || [];
         targetElement.innerHTML = '<option value="">-- اختر --</option>';
         data.forEach(item => {
             const opt = document.createElement('option');
             if (type === 'merchants') {
-                // Determine if item is object or string, though merchants are objects
                 const val = item.name || item;
                 opt.value = val;
                 opt.innerText = val;
@@ -606,10 +639,50 @@ const Settings = {
 };
 
 // Page Load Logic
+window.onload = () => {
+    try {
+        initData();
+        Settings.load();
+        Auth.checkSession(); // New: Check Session
+
+        // Only load these if we are logged in and on a valid page
+        loadDashboard();
+        loadCardsTable();
+        loadWalletsTable();
+        loadMerchantsTable();
+        loadUsersTable();
+
+        if (document.getElementById('transactionsTableBody')) {
+            const transactions = Storage.get('transactions') || [];
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = '';
+            transactions.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${t.id}</td>
+                    <td>${t.merchant}</td>
+                    <td>${t.card}</td>
+                    <td style="color:var(--primary-color)"><strong>${(t.amount || 0).toFixed(2)} ريال</strong></td>
+                    <td>${t.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update dashboard beneficiaries count
+        const bens = Storage.get('beneficiaries') || [];
+        if (document.getElementById('totalBeneficiaries')) {
+            document.getElementById('totalBeneficiaries').innerText = bens.length;
+        }
+    } catch (e) {
+        console.error("Script Initialization Error:", e);
+        // لا تظهر Alert مزعج عند التحميل، فقط سجل الخطأ
+    }
+};
+
 function loadDashboard() {
-    const cards = Storage.get('cards');
-    const transactions = Storage.get('transactions');
-    const bens = Storage.get('beneficiaries');
+    const cards = Storage.get('cards') || [];
+    const transactions = Storage.get('transactions') || [];
 
     if (document.getElementById('totalCards')) document.getElementById('totalCards').innerText = cards.length;
     if (document.getElementById('totalTransactions')) document.getElementById('totalTransactions').innerText = transactions.length;
@@ -621,7 +694,7 @@ function loadDashboard() {
 function loadUsersTable() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
-    const users = Storage.get('users');
+    const users = Storage.get('users') || [];
     tbody.innerHTML = '';
     users.forEach(u => {
         let roleBadge = '';
@@ -646,7 +719,7 @@ function loadUsersTable() {
 }
 
 function loadCardsTable() {
-    const cards = Storage.get('cards');
+    const cards = Storage.get('cards') || [];
     const tbody = document.getElementById('cardsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -669,7 +742,7 @@ function loadCardsTable() {
 }
 
 function loadWalletsTable() {
-    const wallets = Storage.get('wallets');
+    const wallets = Storage.get('wallets') || [];
     const tbody = document.getElementById('walletsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -687,7 +760,7 @@ function loadWalletsTable() {
 }
 
 function loadMerchantsTable() {
-    const merchants = Storage.get('merchants');
+    const merchants = Storage.get('merchants') || [];
     const tbody = document.getElementById('merchantsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -704,40 +777,3 @@ function loadMerchantsTable() {
         tbody.appendChild(tr);
     });
 }
-
-// Initialize on Load
-window.onload = () => {
-    initData();
-    Settings.load();
-    Auth.checkSession(); // New: Check Session
-
-    // Only load these if we are logged in and on a valid page (Auth.checkSession will handle redirects)
-    loadDashboard();
-    loadCardsTable();
-    loadWalletsTable();
-    loadMerchantsTable();
-    loadUsersTable(); // New: Load Users
-
-    if (document.getElementById('transactionsTableBody')) {
-        const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-        const tbody = document.getElementById('transactionsTableBody');
-        tbody.innerHTML = '';
-        transactions.forEach(t => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>#${t.id}</td>
-                <td>${t.merchant}</td>
-                <td>${t.card}</td>
-                <td style="color:var(--primary-color)"><strong>${t.amount.toFixed(2)} ريال</strong></td>
-                <td>${t.date}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    // Update dashboard beneficiaries count if ID exists
-    const bens = Storage.get('beneficiaries');
-    if (document.getElementById('totalBeneficiaries')) {
-        document.getElementById('totalBeneficiaries').innerText = bens.length;
-    }
-};
