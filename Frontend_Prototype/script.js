@@ -586,6 +586,23 @@ const Settings = {
             });
         }
     }
+    populateDropdown: (type, targetElement) => {
+        const data = Storage.get(type);
+        targetElement.innerHTML = '<option value="">-- اختر --</option>';
+        data.forEach(item => {
+            const opt = document.createElement('option');
+            if (type === 'merchants') {
+                // Determine if item is object or string, though merchants are objects
+                const val = item.name || item;
+                opt.value = val;
+                opt.innerText = val;
+            } else if (type === 'beneficiaries') {
+                opt.value = item.identity;
+                opt.innerText = `${item.name} (${item.identity})`;
+            }
+            targetElement.appendChild(opt);
+        });
+    }
 };
 
 // Page Load Logic
@@ -597,14 +614,35 @@ function loadDashboard() {
     if (document.getElementById('totalCards')) document.getElementById('totalCards').innerText = cards.length;
     if (document.getElementById('totalTransactions')) document.getElementById('totalTransactions').innerText = transactions.length;
 
-    // Update Beneficiaries count if element exists (using generic selector or specific ID if added later)
-    // For now, let's update the specific "Beneficiaries" card if we can identify it, 
-    // but the ID in HTML is just a static number. We'll leave it as is or update if ID is added.
-    // However, looking at index.html, there is no ID for beneficiaries count, just static "1,250". 
-    // We will fix that in HTML update step.
-
     const activeCards = cards.filter(c => c.status === 'نشط' || c.status === 'Active').length;
     if (document.getElementById('activeCards')) document.getElementById('activeCards').innerText = activeCards;
+}
+
+function loadUsersTable() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    const users = Storage.get('users');
+    tbody.innerHTML = '';
+    users.forEach(u => {
+        let roleBadge = '';
+        if (u.role === 'admin') roleBadge = '<span class="status-badge status-active">مدير</span>';
+        if (u.role === 'merchant') roleBadge = '<span class="status-badge" style="background:#fff3cd; color:#856404">تاجر</span>';
+        if (u.role === 'beneficiary') roleBadge = '<span class="status-badge" style="background:#d1ecf1; color:#0c5460">مستفيد</span>';
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${u.username}</td>
+                <td>${u.name}</td>
+                <td>${roleBadge}</td>
+                <td>${u.linkedEntity || '-'}</td>
+                <td>
+                    ${u.role !== 'admin' || u.username !== 'admin' ?
+                `<button class="delete-btn" onclick="Actions.deleteUser(${u.id})"><i class="fas fa-trash"></i></button>` :
+                ''}
+                </td>
+            </tr>
+        `;
+    });
 }
 
 function loadCardsTable() {
