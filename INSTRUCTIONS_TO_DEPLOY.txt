@@ -1,0 +1,27 @@
+خطوات رفع المشروع على GitHub:
+
+1. قم بإنشاء مخزن جديد (New Repository) على حسابك في GitHub:
+   - اذهب إلى: https://github.com/new
+   - اسم المشروع (مثلاً): `Traof-System`
+   - لا تضغط على أي خيارات إضافية (مثل Add README)، فقط اسم المشروع واضغط "Create repository".
+
+2. افتح نافذة الأوامر (Terminal/CMD) داخل مجلد المشروع:
+   - اذهب للمجلد: `d:\التنزيلات\.ptmp1183EC\prototype_package`
+   - اضغط بزر الماوس الأيمن في مكان فارغ واختر "Open in Terminal" أو اكتب `cmd` في شريط العنوان بالأعلى واضغط Enter.
+
+3. انسخ وألصق الأوامر التالية بالترتيب (واحد تلو الآخر):
+
+   git init
+   git add .
+   git commit -m "First upload: Frontend Prototype"
+   git branch -M main
+   git remote add origin https://github.com/YOUR-USERNAME/Traof-System.git
+   git push -u origin main
+
+   *(تنبيه: في السطر قبل الأخير، استبدل `YOUR-USERNAME` باسم حسابك في GitHub ورابط المخزن الذي قمت بإنشائه)*.
+
+4. لتفعيل الاستضافة المجانية (GitHub Pages):
+   - بعد الرفع، اذهب لصفحة المشروع على GitHub.
+   - اذهب إلى **Settings** -> **Pages** (في القائمة اليسرى).
+   - تحت عنوان **Build and deployment**، ومن القائمة المنسدلة **Branch**، اختر `main` واضغط **Save**.
+   - انتظر دقيقة وستحصل على رابط مباشر لموقعك (مثل: `username.github.io/Traof-System`).

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة البطاقات - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> لوحة التحكم</a></li>
+            <li><a href="cards.html" class="active"><i class="fas fa-credit-card"></i> البطاقات</a></li>
+            <li><a href="wallets.html"><i class="fas fa-wallet"></i> المحافظ</a></li>
+            <li><a href="merchants.html"><i class="fas fa-store"></i> المتاجر</a></li>
+            <li><a href="pos.html"><i class="fas fa-cash-register"></i> نقطة البيع (POS)</a></li>
+            <li><a href="reports.html"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1><i class="fas fa-credit-card"></i> إدارة البطاقات</h1>
+            <div class="user-profile">
+                <div class="avatar">م</div>
+            </div>
+        </header>
+
+        <div class="form-container">
+            <h3>إضافة بطاقة جديدة</h3>
+            <div class="form-group">
+                <label>رقم البطاقة</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="cardNumInput" placeholder="أدخل الرقم">
+                    <button class="secondary" onclick="Actions.generateCardNum()" style="width: auto;">توليد</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>تخصيص لمحفظة</label>
+                <select id="cardWalletInput">
+                    <option value="إعانة غذائية">إعانة غذائية</option>
+                    <option value="دعم كساء">دعم كساء</option>
+                    <option value="خدمات عامة">خدمات عامة</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الرصيد الأولي</label>
+                <input type="number" id="cardBalanceInput" placeholder="0.00">
+            </div>
+            <button onclick="Actions.addCard()"><i class="fas fa-plus"></i> إصدار البطاقة</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم البطاقة</th>
+                        <th>نوع المحفظة</th>
+                        <th>الرصيد</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="cardsTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقارير - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> لوحة التحكم</a></li>
+            <li><a href="cards.html"><i class="fas fa-credit-card"></i> البطاقات</a></li>
+            <li><a href="wallets.html"><i class="fas fa-wallet"></i> المحافظ</a></li>
+            <li><a href="merchants.html"><i class="fas fa-store"></i> المتاجر</a></li>
+            <li><a href="pos.html"><i class="fas fa-cash-register"></i> نقطة البيع (POS)</a></li>
+            <li><a href="reports.html" class="active"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1><i class="fas fa-chart-bar"></i> تقارير النظام</h1>
+            <div class="user-profile">
+                <div class="avatar">م</div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <h3>إجمالي المبيعات (اليوم)</h3>
+                <div class="value">1,240.00 ريال</div>
+            </div>
+            <div class="stat-card">
+                <h3>عدد العمليات</h3>
+                <div class="value" id="totalTransactions">0</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button onclick="Actions.exportReport()"><i class="fas fa-download"></i> تصدير PDF</button>
+            <button class="secondary" onclick="alert('تصفية النتائج')"><i class="fas fa-filter"></i> تصفية
+                بالتاريخ</button>
+        </div>
+
+        <div class="table-container">
+            <h3>سجل العمليات الحديثة</h3>
+            <table style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>رقم العملية</th>
+                        <th>المتجر</th>
+                        <th>البطاقة</th>
+                        <th>المبلغ</th>
+                        <th>التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

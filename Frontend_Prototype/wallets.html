@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المحافظ - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> لوحة التحكم</a></li>
+            <li><a href="cards.html"><i class="fas fa-credit-card"></i> البطاقات</a></li>
+            <li><a href="wallets.html" class="active"><i class="fas fa-wallet"></i> المحافظ</a></li>
+            <li><a href="merchants.html"><i class="fas fa-store"></i> المتاجر</a></li>
+            <li><a href="pos.html"><i class="fas fa-cash-register"></i> نقطة البيع (POS)</a></li>
+            <li><a href="reports.html"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1><i class="fas fa-wallet"></i> إدارة المحافظ</h1>
+            <div class="user-profile">
+                <div class="avatar">م</div>
+            </div>
+        </header>
+
+        <div class="form-container">
+            <h3>إنشاء نوع محفظة جديد</h3>
+            <div class="form-group">
+                <label>اسم المحفظة</label>
+                <input type="text" id="walletNameInput" placeholder="مثلاً: غذاء، كساء">
+            </div>
+            <div class="form-group">
+                <label>المخصص الافتراضي</label>
+                <input type="number" id="walletFundsInput" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>المتاجر المسموحة</label>
+                <select multiple style="height: 100px;">
+                    <option>سوبرماركت الرياض</option>
+                    <option>متجر الملابس العصرية</option>
+                    <option>صيدلية الشفاء</option>
+                </select>
+            </div>
+            <button onclick="Actions.addWallet()"><i class="fas fa-save"></i> إنشاء المحفظة</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم المحفظة</th>
+                        <th>الأموال المخصصة</th>
+                        <th>المتاجر المرتبطة</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="walletsTableBody">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

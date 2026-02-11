@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نقطة البيع - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"><i class="fas fa-home"></i> لوحة التحكم</a></li>
+            <li><a href="cards.html"><i class="fas fa-credit-card"></i> البطاقات</a></li>
+            <li><a href="wallets.html"><i class="fas fa-wallet"></i> المحافظ</a></li>
+            <li><a href="merchants.html"><i class="fas fa-store"></i> المتاجر</a></li>
+            <li><a href="pos.html" class="active"><i class="fas fa-cash-register"></i> نقطة البيع (POS)</a></li>
+            <li><a href="reports.html"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1><i class="fas fa-cash-register"></i> نقطة البيع (POS)</h1>
+            <div class="user-profile">
+                <span>المتجر: <strong>سوبرماركت الرياض</strong></span>
+                <div class="avatar">س</div>
+            </div>
+        </header>
+
+        <div class="pos-layout">
+            <!-- Left Side: Controls -->
+            <div class="pos-left">
+                <!-- Card Reader Section -->
+                <div class="card-reader-section">
+                    <h3><i class="fas fa-id-card"></i> التحقق من البطاقة</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="cardNumber" placeholder="امسح البطاقة أو أدخل الرقم">
+                        <button onclick="POS.verifyCard()">تحقق</button>
+                    </div>
+                    <div id="cardStatusDisplay" style="margin-top: 10px; font-weight: bold; font-size: 1.1rem;"></div>
+                </div>
+
+                <!-- Numpad Section -->
+                <div class="numpad-section">
+                    <div class="pos-display">
+                        <div class="display-text">الإجمالي</div>
+                        <div class="display-amount"><span class="currency">ريال</span> <span
+                                id="amountDisplay">0.00</span></div>
+                    </div>
+
+                    <div class="pos-keypad">
+                        <button class="key-btn" onclick="POS.addToAmount(1)">1</button>
+                        <button class="key-btn" onclick="POS.addToAmount(2)">2</button>
+                        <button class="key-btn" onclick="POS.addToAmount(3)">3</button>
+                        <button class="key-btn" onclick="POS.addToAmount(4)">4</button>
+                        <button class="key-btn" onclick="POS.addToAmount(5)">5</button>
+                        <button class="key-btn" onclick="POS.addToAmount(6)">6</button>
+                        <button class="key-btn" onclick="POS.addToAmount(7)">7</button>
+                        <button class="key-btn" onclick="POS.addToAmount(8)">8</button>
+                        <button class="key-btn" onclick="POS.addToAmount(9)">9</button>
+                        <button class="key-btn" onclick="POS.addToAmount('.')" style="font-size: 1.2rem;">.</button>
+                        <button class="key-btn" onclick="POS.addToAmount(0)">0</button>
+                        <button class="key-btn" onclick="POS.clearAmount()" style="color: red;"><i
+                                class="fas fa-backspace"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Action -->
+            <div class="pos-right">
+                <h3>تفاصيل العملية</h3>
+                <div class="receipt-preview">
+                    <p><strong>المتجر:</strong> سوبرماركت الرياض</p>
+                    <p><strong>التاريخ:</strong> <span id="currentDate"></span></p>
+                    <hr>
+                    <p>بانتظار العملية...</p>
+                </div>
+                <div class="pos-actions">
+                    <button class="btn-pay" onclick="POS.processPayment()">
+                        <i class="fas fa-check-circle"></i> إتمام الدفع
+                    </button>
+                    <button class="danger" onclick="POS.clearAmount(); document.getElementById('cardNumber').value='';">
+                        <i class="fas fa-times-circle"></i> إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+            <h2>تمت العملية بنجاح!</h2>
+            <div id="receiptContent"
+                style="margin: 20px 0; border: 1px solid #eee; padding: 15px; background: #fafafa; text-align: right; font-family: monospace; direction: rtl;">
+                <!-- Receipt details go here -->
+            </div>
+            <div class="modal-buttons">
+                <button onclick="POS.closeModal()">طباعة الإيصال</button>
+                <button class="secondary" onclick="POS.closeModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('ar-SA');
+    </script>
+</body>
+
+</html>
