@@ -7,6 +7,50 @@
     <title>نقطة البيع - نظام القسائم</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .pos-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .num-btn {
+            padding: 20px;
+            font-size: 20px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .num-btn:hover {
+            background-color: #f8f9fa;
+        }
+
+        .amount-display {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .receipt-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
 <body>
@@ -16,12 +60,14 @@
             <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
         </div>
         <ul class="nav-links">
-            <li><a href="index.html"><i class="fas fa-home"></i> لوحة التحكم</a></li>
-            <li><a href="cards.html"><i class="fas fa-credit-card"></i> البطاقات</a></li>
-            <li><a href="wallets.html"><i class="fas fa-wallet"></i> المحافظ</a></li>
-            <li><a href="merchants.html"><i class="fas fa-store"></i> المتاجر</a></li>
-            <li><a href="pos.html" class="active"><i class="fas fa-cash-register"></i> نقطة البيع (POS)</a></li>
-            <li><a href="reports.html"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+            <li><a href="index.html" data-i18n="nav_dashboard"><i class="fas fa-home"></i> لوحة التحكم</a></li>
+            <li><a href="cards.html" data-i18n="nav_cards"><i class="fas fa-credit-card"></i> البطاقات</a></li>
+            <li><a href="wallets.html" data-i18n="nav_wallets"><i class="fas fa-wallet"></i> المحافظ</a></li>
+            <li><a href="merchants.html" data-i18n="nav_merchants"><i class="fas fa-store"></i> المتاجر</a></li>
+            <li><a href="pos.html" class="active" data-i18n="nav_pos"><i class="fas fa-cash-register"></i> نقطة البيع
+                    (POS)</a></li>
+            <li><a href="reports.html" data-i18n="nav_reports"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+            <li><a href="settings.html" data-i18n="nav_settings"><i class="fas fa-cog"></i> الإعدادات</a></li>
         </ul>
     </nav>
 

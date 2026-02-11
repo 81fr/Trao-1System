@@ -13,9 +13,9 @@ const Storage = {
 function initData() {
     if (localStorage.getItem('cards') === null) {
         Storage.set('cards', [
-            { id: 1, number: '10001', balance: 500, status: 'نشط', wallet: 'إعانة غذائية' },
-            { id: 2, number: '10002', balance: 1500, status: 'نشط', wallet: 'دعم كساء' },
-            { id: 3, number: '10003', balance: 0, status: 'موقوف', wallet: 'خدمات عامة' }
+            { id: 1, number: '10001', balance: 500, status: 'نشط', wallet: 'إعانة غذائية', beneficiary: 'محمد أحمد' },
+            { id: 2, number: '10002', balance: 1500, status: 'نشط', wallet: 'دعم كساء', beneficiary: 'سارة خالد' },
+            { id: 3, number: '10003', balance: 0, status: 'موقوف', wallet: 'خدمات عامة', beneficiary: 'غير محدد' }
         ]);
     }
     if (localStorage.getItem('wallets') === null) {
@@ -36,6 +36,26 @@ function initData() {
             { id: 102, card: '10002', amount: 200, date: '2023-10-26', merchant: 'متجر الملابس العصرية' }
         ]);
     }
+    // New: Custom Labels
+    if (localStorage.getItem('customLabels') === null) {
+        Storage.set('customLabels', {
+            label_cards: 'البطاقات',
+            label_wallets: 'المحافظ',
+            label_merchants: 'المتاجر',
+            label_beneficiaries: 'المستفيدين'
+        });
+    }
+    // New: Categories
+    if (localStorage.getItem('categories') === null) {
+        Storage.set('categories', ['إعانة غذائية', 'دعم كساء', 'خدمات عامة']);
+    }
+    // New: Beneficiaries
+    if (localStorage.getItem('beneficiaries') === null) {
+        Storage.set('beneficiaries', [
+            { id: 1, name: 'محمد أحمد', identity: '1010101010' },
+            { id: 2, name: 'سارة خالد', identity: '2020202020' }
+        ]);
+    }
 }
 
 // Logic for Actions
@@ -44,6 +64,7 @@ const Actions = {
         const number = document.getElementById('cardNumInput').value;
         const wallet = document.getElementById('cardWalletInput').value;
         const balance = parseFloat(document.getElementById('cardBalanceInput').value);
+        const beneficiary = document.getElementById('cardBeneficiaryInput').value;
 
         if (!number || !wallet || isNaN(balance)) {
             alert('يرجى ملء جميع الحقول بشكل صحيح');
@@ -55,7 +76,8 @@ const Actions = {
             number: number,
             wallet: wallet,
             balance: balance,
-            status: 'نشط'
+            status: 'نشط',
+            beneficiary: beneficiary || 'غير محدد'
         });
 
         alert('تم إصدار البطاقة بنجاح!');
@@ -132,7 +154,7 @@ const POS = {
                 POS.currentCard = null;
             } else {
                 POS.currentCard = card;
-                display.innerHTML = `<span style="color:green">تم التحقق: محفظة ${card.wallet} (الرصيد: ${card.balance} ريال)</span>`;
+                display.innerHTML = `<span style="color:green">تم التحقق: محفظة ${card.wallet} (الرصيد: ${card.balance} ريال)</span><br><small>المستفيد: ${card.beneficiary || 'غير معروف'}</small>`;
             }
         } else {
             display.innerHTML = '<span style="color:red">البطاقة غير موجودة</span>';
@@ -197,6 +219,7 @@ const POS = {
             <strong>رقم العملية:</strong> ${transaction.id}<br>
             <strong>التاريخ:</strong> ${transaction.date}<br>
             <strong>البطاقة:</strong> ${transaction.card}<br>
+            <strong>المستفيد:</strong> ${cards[cardIndex].beneficiary || 'غير محدد'}<br>
             <strong>المبلغ:</strong> ${transaction.amount.toFixed(2)} ريال<br>
             <strong>الرصيد المتبقي:</strong> ${cards[cardIndex].balance.toFixed(2)} ريال<br>
             <strong>الحالة:</strong> مقبولة
@@ -215,13 +238,171 @@ const POS = {
     }
 };
 
+// Settings Module
+const Settings = {
+    labels: {},
+
+    load: () => {
+        Settings.labels = Storage.get('customLabels');
+        Settings.applyLabels();
+
+        // If on settings page, populate inputs
+        if (window.location.pathname.includes('settings.html')) {
+            document.getElementById('label_cards').value = Settings.labels.label_cards;
+            document.getElementById('label_wallets').value = Settings.labels.label_wallets;
+            document.getElementById('label_merchants').value = Settings.labels.label_merchants;
+            document.getElementById('label_beneficiaries').value = Settings.labels.label_beneficiaries;
+
+            Settings.renderCategories();
+            Settings.renderBeneficiaries();
+        }
+
+        // Populate dynamic dropdowns if they exist
+        Settings.populateDropdowns();
+    },
+
+    saveLabels: () => {
+        const newLabels = {
+            label_cards: document.getElementById('label_cards').value || 'البطاقات',
+            label_wallets: document.getElementById('label_wallets').value || 'المحافظ',
+            label_merchants: document.getElementById('label_merchants').value || 'المتاجر',
+            label_beneficiaries: document.getElementById('label_beneficiaries').value || 'المستفيدين'
+        };
+        Storage.set('customLabels', newLabels);
+        alert('تم حفظ التسميات بنجاح!');
+        location.reload();
+    },
+
+    applyLabels: () => {
+        const labels = Settings.labels;
+        // Navigation & Titles
+        document.querySelectorAll('[data-i18n="nav_cards"]').forEach(el => el.innerHTML = `<i class="fas fa-credit-card"></i> ${labels.label_cards}`);
+        document.querySelectorAll('[data-i18n="nav_wallets"]').forEach(el => el.innerHTML = `<i class="fas fa-wallet"></i> ${labels.label_wallets}`);
+        document.querySelectorAll('[data-i18n="nav_merchants"]').forEach(el => el.innerHTML = `<i class="fas fa-store"></i> ${labels.label_merchants}`);
+        document.querySelectorAll('[data-i18n="nav_settings"]').forEach(el => el.innerHTML = `<i class="fas fa-cog"></i> الإعدادات`);
+
+        // Specific Pages Titles
+        const pageTitle = document.querySelector('h1[data-i18n]');
+        if (pageTitle) {
+            const key = pageTitle.getAttribute('data-i18n');
+            if (key === 'page_cards_title') pageTitle.innerHTML = `<i class="fas fa-credit-card"></i> إدارة ${labels.label_cards}`;
+            if (key === 'page_wallets_title') pageTitle.innerHTML = `<i class="fas fa-wallet"></i> إدارة ${labels.label_wallets}`;
+            if (key === 'page_merchants_title') pageTitle.innerHTML = `<i class="fas fa-store"></i> إدارة ${labels.label_merchants}`;
+        }
+    },
+
+    addCategory: () => {
+        const input = document.getElementById('newCategoryInput');
+        const val = input.value.trim();
+        if (!val) return;
+
+        Storage.add('categories', val);
+        input.value = '';
+        Settings.renderCategories();
+    },
+
+    deleteCategory: (index) => {
+        const cats = Storage.get('categories');
+        cats.splice(index, 1);
+        Storage.set('categories', cats);
+        Settings.renderCategories();
+    },
+
+    renderCategories: () => {
+        const list = document.getElementById('categoriesList');
+        if (!list) return;
+        const cats = Storage.get('categories');
+        list.innerHTML = '';
+        cats.forEach((cat, idx) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `<span>${cat}</span> <button class="delete-btn" onclick="Settings.deleteCategory(${idx})"><i class="fas fa-trash"></i></button>`;
+            list.appendChild(li);
+        });
+    },
+
+    addBeneficiary: () => {
+        const name = document.getElementById('beneficiaryName').value;
+        const id = document.getElementById('beneficiaryID').value;
+        if (!name || !id) { alert('يرجى إدخال البيانات كاملة'); return; }
+
+        Storage.add('beneficiaries', { id: Date.now(), name, identity: id });
+        document.getElementById('beneficiaryName').value = '';
+        document.getElementById('beneficiaryID').value = '';
+        Settings.renderBeneficiaries();
+        alert('تم إضافة المستفيد');
+    },
+
+    deleteBeneficiary: (id) => {
+        if (!confirm('هل أنت متأكد من الحذف؟')) return;
+        let bens = Storage.get('beneficiaries');
+        bens = bens.filter(b => b.id !== id);
+        Storage.set('beneficiaries', bens);
+        Settings.renderBeneficiaries();
+    },
+
+    renderBeneficiaries: () => {
+        const tbody = document.getElementById('beneficiariesTableBody');
+        if (!tbody) return;
+        const bens = Storage.get('beneficiaries');
+        const cards = Storage.get('cards');
+        tbody.innerHTML = '';
+        bens.forEach(b => {
+            const cardCount = cards.filter(c => c.beneficiary === b.name).length;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${b.name}</td>
+                    <td>${b.identity}</td>
+                    <td>${cardCount} بطاقة</td>
+                    <td><button class="delete-btn" onclick="Settings.deleteBeneficiary(${b.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>
+             `;
+        });
+    },
+
+    populateDropdowns: () => {
+        // Categories Dropdown (in create card or wallet)
+        const walletSelect = document.getElementById('cardWalletInput');
+        if (walletSelect) {
+            const cats = Storage.get('categories');
+            walletSelect.innerHTML = '';
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.innerText = c;
+                walletSelect.appendChild(opt);
+            });
+        }
+
+        // Beneficiaries Dropdown (in create card)
+        const benSelect = document.getElementById('cardBeneficiaryInput');
+        if (benSelect) {
+            const bens = Storage.get('beneficiaries');
+            benSelect.innerHTML = '<option value="">اختر مستفيد...</option>';
+            bens.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.name;
+                opt.innerText = `${b.name} (${b.identity})`;
+                benSelect.appendChild(opt);
+            });
+        }
+    }
+};
+
 // Page Load Logic
 function loadDashboard() {
     const cards = Storage.get('cards');
     const transactions = Storage.get('transactions');
+    const bens = Storage.get('beneficiaries');
 
     if (document.getElementById('totalCards')) document.getElementById('totalCards').innerText = cards.length;
     if (document.getElementById('totalTransactions')) document.getElementById('totalTransactions').innerText = transactions.length;
+
+    // Update Beneficiaries count if element exists (using generic selector or specific ID if added later)
+    // For now, let's update the specific "Beneficiaries" card if we can identify it, 
+    // but the ID in HTML is just a static number. We'll leave it as is or update if ID is added.
+    // However, looking at index.html, there is no ID for beneficiaries count, just static "1,250". 
+    // We will fix that in HTML update step.
 
     const activeCards = cards.filter(c => c.status === 'نشط' || c.status === 'Active').length;
     if (document.getElementById('activeCards')) document.getElementById('activeCards').innerText = activeCards;
@@ -239,6 +420,7 @@ function loadCardsTable() {
         tr.innerHTML = `
             <td>${card.number}</td>
             <td>${card.wallet}</td>
+            <td>${card.beneficiary || '-'}</td>
             <td>${card.balance} ريال</td>
             <td><span class="status-badge ${statusClass}">${card.status}</span></td>
             <td>
@@ -289,6 +471,8 @@ function loadMerchantsTable() {
 // Initialize on Load
 window.onload = () => {
     initData();
+    Settings.load(); // Load settings first to apply labels
+
     loadDashboard();
     loadCardsTable();
     loadWalletsTable();
@@ -309,5 +493,11 @@ window.onload = () => {
             `;
             tbody.appendChild(tr);
         });
+    }
+
+    // Update dashboard beneficiaries count if ID exists (will add in HTML step)
+    const bens = Storage.get('beneficiaries');
+    if (document.getElementById('totalBeneficiaries')) {
+        document.getElementById('totalBeneficiaries').innerText = bens.length;
     }
 };
