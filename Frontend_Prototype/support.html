@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدعم الفني - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .contact-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: 0.3s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .contact-card i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .contact-card h3 {
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .contact-card p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .faq-item {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+        }
+
+        .faq-item h4 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
+        </div>
+        <ul class="nav-links">
+            <!-- Dynamic Links based on Role will ideally go here, strictly hardcoding safe Defaults for now -->
+            <li><a href="#" onclick="history.back()"><i class="fas fa-arrow-right"></i> عودة للخلف</a></li>
+            <li><a href="support.html" class="active"><i class="fas fa-headset"></i> الدعم الفني</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1><i class="fas fa-headset"></i> مركز الدعم والمساعدة</h1>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="contact-card">
+                <i class="fas fa-phone-alt"></i>
+                <h3>الاتصال المباشر</h3>
+                <p>920000000</p>
+                <small>متاح من 8ص - 4م</small>
+            </div>
+            <div class="contact-card">
+                <i class="fab fa-whatsapp"></i>
+                <h3>واتساب الأعمال</h3>
+                <p>050000000</p>
+                <small>متاح 24/7</small>
+            </div>
+            <div class="contact-card">
+                <i class="fas fa-envelope"></i>
+                <h3>البريد الإلكتروني</h3>
+                <p>support@traof.sa</p>
+                <small>الرد خلال 24 ساعة</small>
+            </div>
+        </div>
+
+        <div class="form-container" style="max-width: 100%;">
+            <h3><i class="fas fa-pencil-alt"></i> إرسال تذكرة دعم فني</h3>
+            <div class="form-group">
+                <label>عنوان المشكلة</label>
+                <input type="text" placeholder="اكتب عنواناً مختصراً">
+            </div>
+            <div class="form-group">
+                <label>التفاصيل</label>
+                <textarea style="width:100%; padding:15px; border:1px solid #ddd; border-radius:6px; min-height:100px;"
+                    placeholder="اشرح المشكلة بالتفصيل..."></textarea>
+            </div>
+            <button onclick="alert('تم استلام طلبك رقم #9823 وسيتم التواصل معك قريباً.')"><i
+                    class="fas fa-paper-plane"></i> إرسال الطلب</button>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

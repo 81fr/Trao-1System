@@ -280,6 +280,51 @@ const Actions = {
         location.reload();
     },
 
+    addUser: () => {
+        const username = document.getElementById('newUsername').value.trim();
+        const name = document.getElementById('newName').value.trim();
+        const password = document.getElementById('newPassword').value.trim();
+        const role = document.getElementById('newUserRole').value;
+        const linkedEntity = document.getElementById('linkedEntitySelect').value;
+
+        if (!username || !name || !password) {
+            alert('يرجى تعبئة الحقول الأساسية');
+            return;
+        }
+
+        if ((role === 'merchant' || role === 'beneficiary') && !linkedEntity) {
+            alert('يرجى اختيار الجهة المرتبطة بهذا الحساب (المتجر أو المستفيد)');
+            return;
+        }
+
+        const users = Storage.get('users');
+        if (users.some(u => u.username === username)) {
+            alert('اسم المستخدم مسجل مسبقاً، اختر اسماً آخر.');
+            return;
+        }
+
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            username: username,
+            password: password,
+            role: role,
+            linkedEntity: linkedEntity || null
+        };
+
+        Storage.add('users', newUser);
+        alert('تم إنشاء المستخدم بنجاح!');
+        location.reload();
+    },
+
+    deleteUser: (id) => {
+        if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+        let users = Storage.get('users');
+        users = users.filter(u => u.id !== id);
+        Storage.set('users', users);
+        location.reload();
+    },
+
     generateCardNum: () => {
         const num = '1000' + Math.floor(Math.random() * 9000 + 1000);
         document.getElementById('cardNumInput').value = num;
@@ -633,6 +678,7 @@ window.onload = () => {
     loadCardsTable();
     loadWalletsTable();
     loadMerchantsTable();
+    loadUsersTable(); // New: Load Users
 
     if (document.getElementById('transactionsTableBody')) {
         const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
