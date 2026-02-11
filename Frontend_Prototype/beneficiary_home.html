@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة المستفيد - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-preview {
+            background: linear-gradient(135deg, var(--primary-color), #00897b);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 165, 155, 0.3);
+            text-align: center;
+        }
+
+        .card-preview h2 {
+            margin-top: 5px;
+            font-size: 2rem;
+        }
+
+        .qr-placeholder {
+            background: white;
+            padding: 10px;
+            display: inline-block;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .qr-placeholder i {
+            font-size: 80px;
+            color: #333;
+        }
+
+        .balance-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.jpg" alt="TRAOF Logo" style="max-height: 50px;">
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active"><i class="fas fa-id-card"></i> بطاقتي</a></li>
+            <li><a href="#" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header>
+            <h1><i class="fas fa-user-circle"></i> بوابة المستفيد</h1>
+            <div class="user-profile">
+                <span id="welcomeName">مرحباً، المستفيد</span>
+                <div class="avatar">م</div>
+            </div>
+        </header>
+
+        <!-- No Card State -->
+        <div id="noCardState" style="text-align: center; display: none;">
+            <i class="fas fa-info-circle" style="font-size: 3rem; color: #bbb; margin-bottom: 20px;"></i>
+            <h3>لا توجد بطاقة نشطة مرتبطة بحسابك حالياً.</h3>
+        </div>
+
+        <!-- Active Card State -->
+        <div id="cardDetailsSection">
+            <div class="card-preview">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="opacity: 0.8">رقم البطاقة</span>
+                    <span id="cardStatusBadge"
+                        style="background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;">نشط</span>
+                </div>
+                <h2 id="cardNumberDisplay">0000 0000</h2>
+
+                <div class="balance-display">
+                    الرصيد المتاح: <strong id="cardBalanceDisplay">0.00</strong> ريال
+                </div>
+                <br>
+
+                <div class="qr-placeholder">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <p style="font-size: 0.9rem; opacity: 0.9">أبرز هذا الكود عند البائع لإتمام الشراء</p>
+            </div>
+
+            <!-- Recent Transactions -->
+            <h3><i class="fas fa-history"></i> آخر العمليات</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>المتجر</th>
+                            <th>المبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="beneficiaryTransactionsTable">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Specific Logic for Beneficiary Page
+        window.onload = () => {
+            initData(); // Ensure data loaded
+            Settings.load(); // Apply any label settings (though less relevant here)
+            Auth.checkSession(); // Verify access
+
+            const user = Auth.user;
+            if (!user || user.role !== 'beneficiary') return; // Security safeguard
+
+            document.getElementById('welcomeName').innerText = `مرحباً، ${user.name}`;
+
+            // Find Cards linked to this beneficiary (by name match for prototype simplicity)
+            // In a real app key would be ID
+            const cards = Storage.get('cards');
+            // Try to find by name match
+            const myCard = cards.find(c => c.beneficiary === user.name && (c.status === 'نشط' || c.status === 'Active'));
+
+            if (myCard) {
+                document.getElementById('cardNumberDisplay').innerText = myCard.number;
+                document.getElementById('cardBalanceDisplay').innerText = myCard.balance.toFixed(2);
+
+                // Transactions
+                const transactions = Storage.get('transactions');
+                const myTrans = transactions.filter(t => t.card === myCard.number);
+                const tbody = document.getElementById('beneficiaryTransactionsTable');
+
+                if (myTrans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">لا توجد عمليات سابقة</td></tr>';
+                } else {
+                    myTrans.forEach(t => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td>${t.merchant}</td>
+                                <td style="color:red; font-weight:bold">-${t.amount} ريال</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+            } else {
+                document.getElementById('cardDetailsSection').style.display = 'none';
+                document.getElementById('noCardState').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -9,8 +9,162 @@ const Storage = {
     }
 };
 
+// Authentication Module
+const Auth = {
+    // Current user in session
+    user: JSON.parse(localStorage.getItem('currentUser') || 'null'),
+
+    login: () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const role = document.getElementById('roleInput').value;
+
+        // Simple Validation
+        if (!username || !password) {
+            alert('يرجى إدخال اسم المستخدم وكلمة المرور');
+            return;
+        }
+
+        // Beneficiary Login Logic
+        if (role === 'beneficiary') {
+            // Special check for beneficiaries (ID as username, 123 as password)
+            if (password !== '123') { // Hardcoded demo password
+                alert('كلمة المرور غير صحيحة');
+                return;
+            }
+
+            const beneficiaries = Storage.get('beneficiaries');
+            const ben = beneficiaries.find(b => b.identity === username); // Treat username as ID input
+
+            if (ben) {
+                const sessionUser = {
+                    id: ben.id,
+                    name: ben.name,
+                    username: ben.identity,
+                    role: 'beneficiary'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(sessionUser));
+                Auth.user = sessionUser;
+                window.location.href = 'beneficiary_home.html';
+                return;
+            } else {
+                alert('رقم الهوية غير مسجل في النظام');
+                return;
+            }
+        }
+
+        // Admin & Merchant Login Logic
+        const users = Storage.get('users');
+        const user = users.find(u => u.username === username && u.password === password && u.role === role);
+
+        if (user) {
+            // Success
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            Auth.user = user;
+
+            // Redirect based on role
+            if (user.role === 'admin') {
+                window.location.href = 'index.html';
+            } else {
+                window.location.href = 'merchant_home.html';
+            }
+        } else {
+            alert('بيانات الدخول غير صحيحة!');
+        }
+    },
+
+    logout: () => {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+    },
+
+    setRole: (role) => {
+        document.getElementById('roleInput').value = role;
+        document.querySelectorAll('.role-option').forEach(el => el.classList.remove('active'));
+        document.getElementById(`role_${role}`).classList.add('active');
+
+        // Dynamic placeholder for Beneficiary
+        const userLabel = document.querySelector('label i.fa-user').parentNode;
+        const userInput = document.getElementById('username');
+        if (role === 'beneficiary') {
+            userLabel.childNodes[1].textContent = " رقم الهوية"; // Keep icon
+            userInput.placeholder = "أدخل رقم الهوية (مثلاً: 1010101010)";
+        } else {
+            userLabel.childNodes[1].textContent = " اسم المستخدم";
+            userInput.placeholder = "أدخل اسم المستخدم";
+        }
+    },
+
+    checkSession: () => {
+        // If we are on login page, do nothing (or redirect if already logged in)
+        if (window.location.pathname.includes('login.html')) {
+            if (Auth.user) {
+                if (Auth.user.role === 'admin') window.location.href = 'index.html';
+                else if (Auth.user.role === 'merchant') window.location.href = 'merchant_home.html';
+                else if (Auth.user.role === 'beneficiary') window.location.href = 'beneficiary_home.html';
+            }
+            return;
+        }
+
+        // If not logged in, go to login
+        if (!Auth.user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Role Protection
+        const page = window.location.pathname.split('/').pop();
+
+        // Admin Pages
+        const adminPages = ['index.html', 'cards.html', 'wallets.html', 'merchants.html', 'settings.html'];
+        // Note: reports.html is shared but maybe limited view in future. kept accessible for now.
+
+        if (Auth.user.role === 'merchant') {
+            if (adminPages.some(p => page.includes(p))) {
+                alert('عذراً، ليس لديك صلاحية للوصول لهذه الصفحة.');
+                window.location.href = 'merchant_home.html';
+            }
+        }
+
+        if (Auth.user.role === 'beneficiary') {
+            if (!page.includes('beneficiary_home.html')) {
+                // If trying to access anything else
+                window.location.href = 'beneficiary_home.html';
+            }
+        }
+
+        // Update Logout Button in UI if exists
+        Auth.addLogoutButton();
+    },
+
+    addLogoutButton: () => {
+        const sidebar = document.querySelector('.nav-links');
+        if (sidebar && !document.getElementById('logoutBtn')) {
+            const li = document.createElement('li');
+            li.style.marginTop = '20px';
+            li.style.borderTop = '1px solid #eee';
+            li.innerHTML = `<a href="#" id="logoutBtn" onclick="Auth.logout()" style="color: #d32f2f;"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>`;
+            sidebar.appendChild(li);
+        }
+
+        // Update user profile name if exists
+        const profileName = document.querySelector('.user-profile span');
+        if (profileName && Auth.user) {
+            profileName.innerText = `مرحباً، ${Auth.user.name}`;
+        }
+    }
+};
+
 // Initialize Dummy Data if Empty
 function initData() {
+    // New: Users
+    if (localStorage.getItem('users') === null) {
+        Storage.set('users', [
+            { id: 1, name: 'مدير النظام', username: 'admin', password: '123', role: 'admin' },
+            { id: 2, name: 'تاجر السوبرماركت', username: 'merchant', password: '123', role: 'merchant' }
+        ]);
+    }
+
     if (localStorage.getItem('cards') === null) {
         Storage.set('cards', [
             { id: 1, number: '10001', balance: 500, status: 'نشط', wallet: 'إعانة غذائية', beneficiary: 'محمد أحمد' },
@@ -27,7 +181,7 @@ function initData() {
     if (localStorage.getItem('merchants') === null) {
         Storage.set('merchants', [
             { id: 101, name: 'سوبرماركت الرياض', category: 'مواد غذائية', transactions: 12, status: 'نشط' },
-            { id: 102, name: 'متجر الملابس العصرية', category: 'ملابس', transactions: 5, status: 'نشط' }
+            { id: 201, name: 'متجر الملابس العصرية', category: 'ملابس', transactions: 5, status: 'نشط' }
         ]);
     }
     if (localStorage.getItem('transactions') === null) {
@@ -471,8 +625,10 @@ function loadMerchantsTable() {
 // Initialize on Load
 window.onload = () => {
     initData();
-    Settings.load(); // Load settings first to apply labels
+    Settings.load();
+    Auth.checkSession(); // New: Check Session
 
+    // Only load these if we are logged in and on a valid page (Auth.checkSession will handle redirects)
     loadDashboard();
     loadCardsTable();
     loadWalletsTable();
@@ -495,7 +651,7 @@ window.onload = () => {
         });
     }
 
-    // Update dashboard beneficiaries count if ID exists (will add in HTML step)
+    // Update dashboard beneficiaries count if ID exists
     const bens = Storage.get('beneficiaries');
     if (document.getElementById('totalBeneficiaries')) {
         document.getElementById('totalBeneficiaries').innerText = bens.length;

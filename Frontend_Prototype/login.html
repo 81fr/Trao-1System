@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - نظام القسائم</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: var(--background-color);
+            display: flex;
+            /* Override default flex to center login */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: right;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+        }
+
+        .login-header img {
+            max-width: 120px;
+            margin-bottom: 15px;
+        }
+
+        .login-header h2 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .form-group {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .role-switch {
+            display: flex;
+            background: #f1f1f1;
+            padding: 5px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .role-option {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+            color: #666;
+        }
+
+        .role-option.active {
+            background: white;
+            color: var(--primary-color);
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <img src="logo.jpg" alt="Logo">
+            <h2>تسجيل الدخول</h2>
+            <p>يرجى إدخال بيانات حسابك للمتابعة</p>
+        </div>
+
+        <form onsubmit="event.preventDefault(); Auth.login();">
+            <!-- Hidden Role Input -->
+            <input type="hidden" id="roleInput" value="admin">
+
+            <div class="role-switch">
+                <div class="role-option active" id="role_admin" onclick="Auth.setRole('admin')">
+                    <i class="fas fa-user-shield"></i> مدير النظام
+                </div>
+                <div class="role-option" id="role_merchant" onclick="Auth.setRole('merchant')">
+                    <i class="fas fa-store"></i> تاجر / شريك
+                </div>
+                <div class="role-option" id="role_beneficiary" onclick="Auth.setRole('beneficiary')">
+                    <i class="fas fa-user"></i> مستفيد
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> اسم المستخدم</label>
+                <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> كلمة المرور</label>
+                <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+            </div>
+
+            <button type="submit" class="login-btn"><i class="fas fa-sign-in-alt"></i> دخول</button>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Override body flex behavior from style.css just for this page if needed
+        document.body.style.display = 'flex'; 
+    </script>
+</body>
+
+</html>
